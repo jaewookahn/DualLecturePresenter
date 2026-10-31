@@ -67,6 +67,49 @@ struct DualLecturePresenterApp: App {
                 }
                 .keyboardShortcut("p", modifiers: [.command, .shift])
             }
+            
+            CommandMenu("강의 도구") {
+                Button("기본 포인터") {
+                    model.activeTool = .navigation
+                }
+                .keyboardShortcut("0", modifiers: [.command])
+                
+                Button("레이저 포인터 토글") {
+                    model.activeTool = (model.activeTool == .laser ? .navigation : .laser)
+                }
+                .keyboardShortcut("l", modifiers: [.command])
+                
+                Button("펜 필기 모드") {
+                    model.activeTool = (model.activeTool == .pen ? .navigation : .pen)
+                }
+                .keyboardShortcut("d", modifiers: [.command])
+                
+                Button("형광펜 (하일라이터) 모드") {
+                    model.activeTool = (model.activeTool == .highlighter ? .navigation : .highlighter)
+                }
+                .keyboardShortcut("h", modifiers: [.command])
+                
+                Button("텍스트 타이핑 모드") {
+                    model.activeTool = (model.activeTool == .text ? .navigation : .text)
+                }
+                .keyboardShortcut("t", modifiers: [.command])
+                
+                Button("지우개 모드") {
+                    model.activeTool = (model.activeTool == .eraser ? .navigation : .eraser)
+                }
+                .keyboardShortcut("e", modifiers: [.command])
+                
+                Divider()
+                
+                Button("현재 페이지 모든 필기/텍스트 지우기") {
+                    model.clearCurrentPageAnnotations()
+                }
+                .keyboardShortcut("k", modifiers: [.command])
+                
+                Button("전체 필기/텍스트 지우기") {
+                    model.clearAllAnnotations()
+                }
+            }
         }
     }
 }

@@ -26,10 +26,22 @@ public class PresenterModel: ObservableObject {
     @Published public var laserPoint: CGPoint? = nil // Normalized (0...1, 0...1) in page coordinates
     @Published public var laserPageIndex: Int = 0
     
+    // Pen & Highlighter Strokes
     @Published public var drawingStrokes: [DrawingStroke] = []
     @Published public var currentStroke: DrawingStroke? = nil
     @Published public var penColor: Color = .red
     @Published public var penLineWidth: CGFloat = 3.5
+    @Published public var highlighterColor: Color = Color.yellow.opacity(0.38)
+    @Published public var highlighterWidth: CGFloat = 22.0
+    
+    // Text Annotations
+    @Published public var textAnnotations: [TextAnnotation] = []
+    @Published public var activeEditingTextId: UUID? = nil
+    @Published public var textColor: Color = .red
+    @Published public var textFontSize: CGFloat = 18.0
+    
+    // Eraser Settings
+    @Published public var eraserRadius: CGFloat = 0.035
     
     // MARK: - Student Window Status
     @Published public var isStudentWindowOpen: Bool = false
@@ -156,13 +168,16 @@ public class PresenterModel: ObservableObject {
         self.laserPageIndex = pageIndex
     }
     
-    // MARK: - Live Drawing
-    public func startStroke(at normalizedPoint: CGPoint, pageIndex: Int) {
+    // MARK: - Live Drawing & Highlighting
+    public func startStroke(at normalizedPoint: CGPoint, pageIndex: Int, isHighlighter: Bool = false) {
+        let color = isHighlighter ? highlighterColor : penColor
+        let width = isHighlighter ? highlighterWidth : penLineWidth
         let stroke = DrawingStroke(
             pageIndex: pageIndex,
             points: [normalizedPoint],
-            color: penColor,
-            lineWidth: penLineWidth
+            color: color,
+            lineWidth: width,
+            isHighlighter: isHighlighter
         )
         self.currentStroke = stroke
     }
@@ -180,12 +195,81 @@ public class PresenterModel: ObservableObject {
         self.currentStroke = nil
     }
     
-    public func clearCurrentPageDrawings() {
-        drawingStrokes.removeAll(where: { $0.pageIndex == currentPageIndex })
+    // MARK: - Eraser Functionality
+    public func eraseAt(normalizedPoint: CGPoint, pageIndex: Int, radius: CGFloat? = nil) {
+        let r = radius ?? eraserRadius
+        let rSq = r * r
+        
+        // 1. Remove drawing strokes that intersect with the eraser circle
+        drawingStrokes.removeAll { stroke in
+            guard stroke.pageIndex == pageIndex else { return false }
+            return stroke.points.contains { pt in
+                let dx = pt.x - normalizedPoint.x
+                let dy = pt.y - normalizedPoint.y
+                return (dx * dx + dy * dy) <= rSq
+            }
+        }
+        
+        // 2. Remove text annotations touched by the eraser
+        textAnnotations.removeAll { note in
+            guard note.pageIndex == pageIndex else { return false }
+            let dx = note.normalizedPosition.x - normalizedPoint.x
+            let dy = note.normalizedPosition.y - normalizedPoint.y
+            return (dx * dx + dy * dy) <= (rSq * 2.0)
+        }
     }
     
-    public func clearAllDrawings() {
+    // MARK: - Text Annotation
+    public func addOrEditTextAnnotation(at normalizedPoint: CGPoint, pageIndex: Int) {
+        // Check if an existing annotation was clicked
+        if let existing = textAnnotations.first(where: {
+            $0.pageIndex == pageIndex &&
+            abs($0.normalizedPosition.x - normalizedPoint.x) < 0.08 &&
+            abs($0.normalizedPosition.y - normalizedPoint.y) < 0.05
+        }) {
+            self.activeEditingTextId = existing.id
+            return
+        }
+        
+        // Create new text annotation
+        let newAnnotation = TextAnnotation(
+            pageIndex: pageIndex,
+            normalizedPosition: normalizedPoint,
+            text: "",
+            fontSize: textFontSize,
+            color: textColor
+        )
+        self.textAnnotations.append(newAnnotation)
+        self.activeEditingTextId = newAnnotation.id
+    }
+    
+    public func updateTextAnnotation(id: UUID, text: String) {
+        if let idx = textAnnotations.firstIndex(where: { $0.id == id }) {
+            textAnnotations[idx].text = text
+        }
+    }
+    
+    public func deleteTextAnnotation(id: UUID) {
+        textAnnotations.removeAll(where: { $0.id == id })
+        if activeEditingTextId == id {
+            activeEditingTextId = nil
+        }
+    }
+    
+    public func finishEditingText() {
+        // Clean up empty annotations
+        textAnnotations.removeAll(where: { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
+        self.activeEditingTextId = nil
+    }
+    
+    public func clearCurrentPageAnnotations() {
+        drawingStrokes.removeAll(where: { $0.pageIndex == currentPageIndex })
+        textAnnotations.removeAll(where: { $0.pageIndex == currentPageIndex })
+    }
+    
+    public func clearAllAnnotations() {
         drawingStrokes.removeAll()
+        textAnnotations.removeAll()
     }
     
     // MARK: - Timer Control

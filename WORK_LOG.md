@@ -74,6 +74,30 @@
 - `PresenterModel`이 `@MainActor`로 격리되어 있어 `NotificationCenter` 콜백에서 경고 발생.
 - `InteractivePDFContainerView`, `AnnotationCanvasView` 및 모든 옵저버 핸들러에 `@MainActor` 및 `MainActor.assumeIsolated { ... }`를 명시하여 Swift 6 컴파일 에러 및 경고를 0건으로 정리.
 
+### 4.4 레이저 포인터 활성화 시 스크롤 차단 문제 해결
+- **증상**: 레이저 포인터 선택 시 마우스 휠 및 2손가락 트랙패드 스크롤이 동작하지 않음.
+- **원인 분석**:
+  1. `AnnotationCanvasView.hitTest()`에서 `.laser` 도구일 때 오버레이 컨테이너를 반환하여 마우스 스크롤 이벤트가 `PDFView`에 도달하지 못하고 흡수됨.
+  2. `InteractivePDFContainerView`에 `scrollWheel(with:)` 포워딩이 누락되어 있었음.
+- **해결**:
+  1. `hitTest()`에서 `.laser`는 `nil`을 반환하도록 수정 (포인터 추적은 `NSTrackingArea`로 독립 수신하므로 클릭/스크롤을 가로챌 필요가 없음).
+  2. `InteractivePDFContainerView.scrollWheel(with:)`를 오버라이드하여 `pdfView.scrollWheel(with: event)`로 전달함으로써 모든 도구 활성화 상태에서도 스크롤이 100% 작동하도록 개선.
+
+### 4.5 지우개(Eraser) 도구 구현
+- **증상**: 지우개 도구 선택 시 마우스 드래그를 해도 필기가 지워지지 않음.
+- **원인**: 도구 열거형에 정의만 되어 있고 마우스 다운/드래그 시 획 제거 로직이 구현되지 않음.
+- **해결**:
+  - `eraseAt(normalizedPoint:pageIndex:radius:)` 메서드 구현.
+  - 마우스 드래그 반경 내에 포함되는 모든 스트로크 좌표와 텍스트 노트를 탐지하여 즉시 제거 및 학생 화면 동기화.
+  - 지우개 커서 위치에 시각적 원형 가이드 링 표시.
+
+### 4.6 형광펜(Highlighter) 및 텍스트 타이핑(Text Annotation) 추가
+- **형광펜 (하일라이터)**:
+  - 굵고 반투명한 노란색 스트로크(`opacity: 0.38`, 기본 22pt)와 `.multiply` 블렌드 모드를 적용하여 글자를 가리지 않고 도표/텍스트를 부드럽게 강조.
+- **텍스트 타이핑**:
+  - 슬라이드 원하는 곳을 클릭하면 인라인 `NSTextField`가 즉시 열려 키보드로 메모 입력 가능.
+  - Enter로 완료 시 학생 화면에도 정규화 좌표계 기반으로 동일한 위치에 깔끔한 배지와 텍스트로 실시간 렌더링.
+
 ---
 
 ## 5. 빌드 및 배포 패키징

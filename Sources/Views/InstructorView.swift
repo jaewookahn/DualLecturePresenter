@@ -223,7 +223,7 @@ public struct InstructorView: View {
                 }
             }
             .pickerStyle(.segmented)
-            .frame(width: 220)
+            .frame(width: 360)
             
             // Student Window Launch Button
             Button(action: {
@@ -317,10 +317,10 @@ public struct InstructorView: View {
                 .background(Color(nsColor: .controlBackgroundColor))
                 .cornerRadius(10)
                 
-                // Drawing Tools Options
+                // Tool-specific Settings Panels
                 if model.activeTool == .pen {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("펜 옵션")
+                        Text("✏️ 펜 필기 옵션")
                             .font(.caption)
                             .fontWeight(.bold)
                             .foregroundColor(.secondary)
@@ -329,13 +329,91 @@ public struct InstructorView: View {
                             ColorPicker("", selection: $model.penColor)
                                 .labelsHidden()
                             
-                            Slider(value: $model.penLineWidth, in: 1...10, step: 0.5)
+                            Slider(value: $model.penLineWidth, in: 1...12, step: 0.5)
                             
-                            Button("지우기") {
-                                model.clearCurrentPageDrawings()
+                            Text("\(String(format: "%.1f", model.penLineWidth)) pt")
+                                .font(.caption2)
+                                .frame(width: 40)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .cornerRadius(10)
+                } else if model.activeTool == .highlighter {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("🖍️ 형광펜 (하일라이터)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 8) {
+                            ColorPicker("", selection: $model.highlighterColor)
+                                .labelsHidden()
+                            
+                            Slider(value: $model.highlighterWidth, in: 12...45, step: 1.0)
+                            
+                            Text("\(Int(model.highlighterWidth)) pt")
+                                .font(.caption2)
+                                .frame(width: 36)
+                        }
+                        
+                        Text("노란색 반투명 굵은 선으로 글자와 도표 위를 부드럽게 강조합니다.")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .cornerRadius(10)
+                } else if model.activeTool == .text {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("💬 텍스트 타이핑")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 8) {
+                            ColorPicker("", selection: $model.textColor)
+                                .labelsHidden()
+                            
+                            Slider(value: $model.textFontSize, in: 12...36, step: 1.0)
+                            
+                            Text("\(Int(model.textFontSize)) pt")
+                                .font(.caption2)
+                                .frame(width: 36)
+                        }
+                        
+                        Text("슬라이드 위 원하는 위치를 클릭하면 텍스트 입력창이 열립니다. (Enter: 완료, Esc: 취소)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .cornerRadius(10)
+                } else if model.activeTool == .eraser {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("🧹 지우개")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.secondary)
+                        
+                        Text("슬라이드 위의 펜 선이나 텍스트를 마우스로 드래그하면 지워집니다.")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        Divider()
+                        
+                        HStack(spacing: 6) {
+                            Button("현재 페이지 지우기") {
+                                model.clearCurrentPageAnnotations()
                             }
                             .buttonStyle(.bordered)
-                            .controlSize(.mini)
+                            .controlSize(.small)
+                            
+                            Button("전체 지우기") {
+                                model.clearAllAnnotations()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
                         }
                     }
                     .padding(12)
@@ -356,6 +434,9 @@ public struct InstructorView: View {
                         shortcutRow(key: "B", desc: "학생 화면 암전 (Blackout)")
                         shortcutRow(key: "L", desc: "레이저 포인터")
                         shortcutRow(key: "P", desc: "펜 필기 모드")
+                        shortcutRow(key: "H", desc: "형광펜 (하일라이터)")
+                        shortcutRow(key: "T", desc: "텍스트 타이핑")
+                        shortcutRow(key: "E", desc: "지우개 모드")
                     }
                 }
                 .padding(12)
