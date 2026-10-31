@@ -98,6 +98,27 @@
   - 슬라이드 원하는 곳을 클릭하면 인라인 `NSTextField`가 즉시 열려 키보드로 메모 입력 가능.
   - Enter로 완료 시 학생 화면에도 정규화 좌표계 기반으로 동일한 위치에 깔끔한 배지와 텍스트로 실시간 렌더링.
 
+### 4.7 PDFView 내부 키보드 이벤트(스페이스바, 좌우 화살표) 삼킴 문제 해결
+- **증상**: 슬라이드 모드에서 강사용 창 포커스 시 스페이스바나 좌우 화살표 키를 눌러도 슬라이드가 넘어가지 않는 현상 발생.
+- **원인 분석**:
+  - `PDFView`의 내부 `NSScrollView`/`PDFClipView`가 First Responder로 키 이벤트를 수신하면, 자체적인 상하좌우 스크롤 로직으로 이벤트를 소비(`keyDown` 흡수)하여 상위 SwiftUI의 `.keyboardShortcut()` 핸들러까지 이벤트가 도달하지 못함.
+- **해결**:
+  - AppKit 레벨의 로컬 이벤트 모니터 `NSEvent.addLocalMonitorForEvents(matching: .keyDown)`를 `PresenterModel.setupKeyboardMonitor()`에 구현.
+  - 현재 First Responder가 텍스트 필드(`NSTextView`, `NSTextField`)인지 확인하여, 텍스트 타이핑 중일 때는 원본 이벤트를 그대로 통과시킴.
+  - 그 외의 경우 `Space(49)`, `Right Arrow(124)`, `Left Arrow(123)`, `Down Arrow(125)`, `Up Arrow(126)`, `PageDown(121)`, `PageUp(116)` 및 단일 키 도구 토글(`B`, `L`, `P`, `H`, `T`, `E`)을 가로채어 `PresenterModel`의 상태를 즉각 변경하고 이벤트를 `nil`로 소비하여 완벽하고 즉각적인 슬라이드 전환을 보장.
+
+### 4.8 강사/학생 창 화면 비율(Aspect Ratio) 불일치 및 Zoom 공유 시 레터박스 방지
+- **증상**: 강사용 작업 창과 학생용 창의 가로세로 비율이 다르면 화상회의(Zoom, Google Meet) 공유 시 불필요한 검은 여백(Letterbox)이 발생하거나, 연속 스크롤 시 한 화면에 보이는 영역의 상하 길이가 달라 싱크 체감이 저하됨.
+- **해결**:
+  - `PresenterModel`에 `AspectRatioMode` 열거형 및 `pdfPageSize`, `instructorViewportSize` 상태 추가.
+  - 강사용 화면의 뷰포트 크기를 `GeometryReader`로 실시간 추적.
+  - `StudentWindowController.applyAspectRatio(_:nativeSize:)` 구현:
+    1. **PDF 원본 비율 (`.pdfNative`)**: PDF 문서 첫 페이지의 실제 CropBox 비율로 학생 창의 가로세로를 동기화하고 `window.contentAspectRatio`를 고정.
+    2. **강사 뷰 비율 복제 (`.matchInstructor`)**: 강사의 현재 메인 PDF 뷰포트 가로세로 비율로 학생 창의 높이를 자동 재계산하고 크기 조절 제약을 동기화.
+    3. **16:9 와이드 / 4:3 표준**: 발표 표준 비율 프리셋 원클릭 지원.
+    4. **자유 조절 (`.free`)**: 제약 해제(`contentAspectRatio = (0, 0)`).
+  - 강사용 대시보드 우측 패널에 원클릭 퀵 비율 버튼 패널을 배치하여 직관적으로 모드를 전환할 수 있도록 구현 완료.
+
 ---
 
 ## 5. 빌드 및 배포 패키징

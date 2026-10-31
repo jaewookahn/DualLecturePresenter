@@ -78,6 +78,51 @@ public class StudentWindowController: NSWindowController, NSWindowDelegate {
         }
     }
     
+    // MARK: - Aspect Ratio Control
+    public func applyAspectRatio(_ mode: AspectRatioMode, nativeSize: CGSize? = nil) {
+        guard let window = window else { return }
+        model?.aspectRatioMode = mode
+        
+        switch mode {
+        case .pdfNative:
+            let size = nativeSize ?? model?.pdfPageSize ?? CGSize(width: 16, height: 9)
+            guard size.width > 0 && size.height > 0 else { return }
+            window.contentAspectRatio = NSSize(width: size.width, height: size.height)
+            adjustWindowHeightForAspectRatio(widthToHeight: size.width / size.height)
+            
+        case .ratio16_9:
+            window.contentAspectRatio = NSSize(width: 16, height: 9)
+            adjustWindowHeightForAspectRatio(widthToHeight: 16.0 / 9.0)
+            
+        case .ratio4_3:
+            window.contentAspectRatio = NSSize(width: 4, height: 3)
+            adjustWindowHeightForAspectRatio(widthToHeight: 4.0 / 3.0)
+            
+        case .matchInstructor:
+            if let size = model?.instructorViewportSize, size.width > 0 && size.height > 0 {
+                window.contentAspectRatio = NSSize(width: size.width, height: size.height)
+                adjustWindowHeightForAspectRatio(widthToHeight: size.width / size.height)
+            }
+            
+        case .free:
+            window.contentAspectRatio = NSSize(width: 0, height: 0)
+        }
+    }
+    
+    private func adjustWindowHeightForAspectRatio(widthToHeight: CGFloat) {
+        guard let window = window, widthToHeight > 0 else { return }
+        let currentWidth = window.frame.width
+        let newContentHeight = currentWidth / widthToHeight
+        let titleBarHeight = window.frame.height - window.contentRect(forFrameRect: window.frame).height
+        let totalHeight = newContentHeight + titleBarHeight
+        let newOriginY = window.frame.maxY - totalHeight
+        window.setFrame(
+            NSRect(x: window.frame.origin.x, y: newOriginY, width: currentWidth, height: totalHeight),
+            display: true,
+            animate: true
+        )
+    }
+    
     // MARK: - NSWindowDelegate
     public func windowWillClose(_ notification: Notification) {
         model?.isStudentWindowOpen = false

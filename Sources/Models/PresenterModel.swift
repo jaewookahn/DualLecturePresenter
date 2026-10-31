@@ -3,6 +3,16 @@ import AppKit
 import PDFKit
 import Combine
 
+public enum AspectRatioMode: String, CaseIterable, Identifiable {
+    case pdfNative = "PDF 원본 비율"
+    case matchInstructor = "강사 뷰 비율 복제"
+    case ratio16_9 = "16:9 와이드"
+    case ratio4_3 = "4:3 표준"
+    case free = "자유 조절"
+    
+    public var id: String { rawValue }
+}
+
 @MainActor
 public class PresenterModel: ObservableObject {
     // MARK: - Documents
@@ -20,6 +30,11 @@ public class PresenterModel: ObservableObject {
     @Published public var autoScales: Bool = true
     @Published public var zoomScale: CGFloat = 1.0
     @Published public var isBlackout: Bool = false
+    
+    // MARK: - Aspect Ratio Management
+    @Published public var aspectRatioMode: AspectRatioMode = .pdfNative
+    @Published public var pdfPageSize: CGSize = CGSize(width: 800, height: 600)
+    @Published public var instructorViewportSize: CGSize = CGSize(width: 800, height: 600)
     
     // MARK: - Interactive Tools
     @Published public var activeTool: ToolMode = .navigation
@@ -58,8 +73,96 @@ public class PresenterModel: ObservableObject {
     public var onScrollSyncToInstructor: ((_ pageIndex: Int, _ relativeY: CGFloat) -> Void)?
     public var onPageSyncToInstructor: ((_ pageIndex: Int) -> Void)?
     
+    private var keyMonitor: Any?
+    
     public init() {
-        // Setup default timer
+        setupKeyboardMonitor()
+    }
+    
+    public func setupKeyboardMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self else { return event }
+            
+            // Check if user is typing in a text field or text view
+            if let firstResponder = NSApp.keyWindow?.firstResponder {
+                if firstResponder is NSTextView || firstResponder is NSTextField {
+                    return event
+                }
+            }
+            
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            
+            // Support unmodified or Shift-modified presentation keys
+            if flags.isEmpty || flags == .shift {
+                switch event.keyCode {
+                case 49: // Spacebar
+                    if flags == .shift {
+                        self.previousPage()
+                    } else {
+                        self.nextPage()
+                    }
+                    return nil
+                    
+                case 124: // Right Arrow
+                    self.nextPage()
+                    return nil
+                    
+                case 123: // Left Arrow
+                    self.previousPage()
+                    return nil
+                    
+                case 125: // Down Arrow
+                    if self.displayMode == .singlePage {
+                        self.nextPage()
+                        return nil
+                    }
+                    
+                case 126: // Up Arrow
+                    if self.displayMode == .singlePage {
+                        self.previousPage()
+                        return nil
+                    }
+                    
+                case 121: // Page Down (Presentation Remote Clicker)
+                    self.nextPage()
+                    return nil
+                    
+                case 116: // Page Up (Presentation Remote Clicker)
+                    self.previousPage()
+                    return nil
+                    
+                case 11: // 'B' key (Blackout toggle)
+                    self.isBlackout.toggle()
+                    return nil
+                    
+                case 37: // 'L' key (Laser toggle)
+                    self.activeTool = (self.activeTool == .laser ? .navigation : .laser)
+                    return nil
+                    
+                case 35: // 'P' key (Pen toggle)
+                    self.activeTool = (self.activeTool == .pen ? .navigation : .pen)
+                    return nil
+                    
+                case 4: // 'H' key (Highlighter toggle)
+                    self.activeTool = (self.activeTool == .highlighter ? .navigation : .highlighter)
+                    return nil
+                    
+                case 17: // 'T' key (Text tool)
+                    self.activeTool = (self.activeTool == .text ? .navigation : .text)
+                    return nil
+                    
+                case 14: // 'E' key (Eraser tool)
+                    self.activeTool = (self.activeTool == .eraser ? .navigation : .eraser)
+                    return nil
+                    
+                default:
+                    break
+                }
+            }
+            
+            return event
+        }
     }
     
     // MARK: - Document Loading
@@ -68,6 +171,14 @@ public class PresenterModel: ObservableObject {
         self.instructorURL = url
         self.instructorDoc = doc
         updatePageCount()
+        
+        if let firstPage = doc.page(at: 0) {
+            let bounds = firstPage.bounds(for: .cropBox)
+            self.pdfPageSize = bounds.size
+            if aspectRatioMode == .pdfNative {
+                StudentWindowController.shared.applyAspectRatio(.pdfNative, nativeSize: bounds.size)
+            }
+        }
         
         // Auto-detect matching student document if in the same directory
         attemptAutoPairStudent(from: url)
@@ -78,6 +189,14 @@ public class PresenterModel: ObservableObject {
         self.studentURL = url
         self.studentDoc = doc
         updatePageCount()
+        
+        if let firstPage = doc.page(at: 0) {
+            let bounds = firstPage.bounds(for: .cropBox)
+            self.pdfPageSize = bounds.size
+            if aspectRatioMode == .pdfNative {
+                StudentWindowController.shared.applyAspectRatio(.pdfNative, nativeSize: bounds.size)
+            }
+        }
     }
     
     public func useInstructorDocForStudent() {
