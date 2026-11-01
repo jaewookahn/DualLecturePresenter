@@ -18,7 +18,7 @@ struct DualLecturePresenterApp: App {
     }
     
     var body: some Scene {
-        WindowGroup("강사용 프리젠터 (Instructor Presenter)") {
+        WindowGroup("쌤쌤이 - 강사용 프리젠터") {
             InstructorView(model: model)
                 .onAppear {
                     StudentWindowController.shared.setup(with: model)

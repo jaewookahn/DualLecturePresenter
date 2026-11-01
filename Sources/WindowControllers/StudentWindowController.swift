@@ -14,7 +14,7 @@ public class StudentWindowController: NSWindowController, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "학생용 강의 화면 (온라인 화면 공유용)"
+        window.title = "쌤쌤이 - 학생용 강의 화면 (온라인 화면 공유용)"
         window.tabbingMode = .disallowed
         window.collectionBehavior = [.fullScreenPrimary, .participatesInCycle]
         window.isReleasedWhenClosed = false

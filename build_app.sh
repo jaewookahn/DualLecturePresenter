@@ -2,10 +2,11 @@
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_NAME="DualLecturePresenter"
+BIN_NAME="DualLecturePresenter"
+APP_NAME="쌤쌤이"
 BUNDLE_DIR="$PROJECT_DIR/${APP_NAME}.app"
 
-echo "🔨 Building Release binary for ${APP_NAME}..."
+echo "🔨 Building Release binary for ${BIN_NAME} (${APP_NAME})..."
 swift build -c release --package-path "$PROJECT_DIR"
 
 echo "📦 Assembling ${APP_NAME}.app bundle..."
@@ -14,7 +15,7 @@ mkdir -p "$BUNDLE_DIR/Contents/MacOS"
 mkdir -p "$BUNDLE_DIR/Contents/Resources"
 
 # Copy binary
-cp "$PROJECT_DIR/.build/release/$APP_NAME" "$BUNDLE_DIR/Contents/MacOS/$APP_NAME"
+cp "$PROJECT_DIR/.build/release/$BIN_NAME" "$BUNDLE_DIR/Contents/MacOS/$BIN_NAME"
 
 # Copy AppIcon if exists
 if [ -f "$PROJECT_DIR/AppIcon.icns" ]; then
@@ -40,13 +41,13 @@ cat << 'EOF' > "$BUNDLE_DIR/Contents/Info.plist"
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.antigravity.DualLecturePresenter</string>
+    <string>com.antigravity.ssamssami</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>DualLecturePresenter</string>
+    <string>쌤쌤이</string>
     <key>CFBundleDisplayName</key>
-    <string>강의용 듀얼 프리젠터</string>
+    <string>쌤쌤이</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

@@ -1,4 +1,7 @@
-# 🎓 강의용 듀얼 프리젠터 (DualLecturePresenter for macOS)
+# 🎓 쌤쌤이 (SSamSSami)
+
+> **선생님(쌤)들을 위한, 두 화면이 쌤쌤(Same-Same)으로 똑같이 싱크되는 macOS 강의용 듀얼 프리젠터**  
+> *책 클리핑의 **줄줄이**, 성경 Q&A의 **답답이**에 이은 3번째 시리즈 앱입니다.*
 
 강의 진행 시 **강사용(어노테이션, 비밀 메모, 답안 포함) PDF**와 **학생용(클린 버전) PDF**를 동시에 관리하며, 스크롤과 액션을 실시간 동기화하는 맥(macOS) 전용 프리젠터 앱입니다.
 
@@ -76,7 +79,7 @@
 ### 1. 즉시 실행
 Finder에서 빌드된 앱 번들을 바로 실행할 수 있습니다:
 ```bash
-open /Users/codex/prj/DualLecturePresenter/DualLecturePresenter.app
+open /Users/codex/prj/DualLecturePresenter/쌤쌤이.app
 ```
 
 ### 2. Mac 응용 프로그램(/Applications)에 설치
@@ -84,7 +87,7 @@ open /Users/codex/prj/DualLecturePresenter/DualLecturePresenter.app
 cd /Users/codex/prj/DualLecturePresenter
 ./install_to_applications.sh
 ```
-설치 후 Spotlight (`⌘ + Space`)에서 **DualLecturePresenter** 또는 **강의용 듀얼 프리젠터**를 검색하여 실행할 수 있습니다.
+설치 후 Spotlight (`⌘ + Space`)에서 **쌤쌤이** 또는 **SSamSSami**를 검색하여 실행할 수 있습니다.
 
 ---
 

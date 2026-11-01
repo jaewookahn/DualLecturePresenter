@@ -1,4 +1,4 @@
-# 📝 DualLecturePresenter 개발 작업 기록 및 기술 보고서 (Work Log)
+# 📝 쌤쌤이 (SSamSSami) 개발 작업 기록 및 기술 보고서 (Work Log)
 
 ## 1. 개요 및 배경
 - **작업 일시**: 2026-10-31
@@ -133,9 +133,19 @@
   3. **수정키 필터링 정밀화**: 오직 사용자가 직접 누른 `[.command, .control, .option]`만 필터링하도록 수정하여, Mac 물리 화살표 키와 프레젠테이션 클릭커가 100% 즉시 인식되도록 수정.
   4. **포커스 보존**: 학생용 창 표출 시 `window.orderFront(nil)`을 사용하여 강사용 창이 시작부터 메인 포커스를 유지하도록 개선.
 
+### 4.10 공식 브랜드 명명: '쌤쌤이 (SSamSSami)' 및 독립 리포지토리 분리
+- **명칭 유래**:
+  - 선생님(쌤)들을 위한 프리젠터
+  - 강사용 화면과 학생용 화면이 완벽하게 똑같이(쌤쌤으로) 싱크된다는 의미 (Same-Same)
+  - 기존 패밀리 앱 시리즈인 책 클리핑 하이라이트 앱 **'줄줄이'**, 성경 Q&A 앱 **'답답이'**의 뒤를 잇는 3번째 공식 시리즈
+- **브랜드 리브랜딩 적용**:
+  - macOS 앱 번들 및 표시명: `/Applications/쌤쌤이.app`
+  - 윈도우 타이틀: `쌤쌤이 - 강사용 프리젠터`, `쌤쌤이 - 학생용 강의 화면 (온라인 화면 공유용)`
+  - 독립 GitHub 공개 리포지토리: `https://github.com/jaewookahn/DualLecturePresenter`
+
 ---
 
 ## 5. 빌드 및 배포 패키징
-- `build_app.sh`: Release 최적화 빌드 후 Info.plist, AppIcon.icns, 번들 구조를 구성하고 ad-hoc codesign 적용.
-- `install_to_applications.sh`: `/Applications/DualLecturePresenter.app`으로 1클릭 설치 및 실행 지원.
+- `build_app.sh`: Release 최적화 빌드 후 Info.plist, AppIcon.icns, `쌤쌤이.app` 번들 구조 구성 및 ad-hoc codesign 적용.
+- `install_to_applications.sh`: `/Applications/쌤쌤이.app`으로 1클릭 설치 및 실행 지원.
 - `SamplePDFGenerator.swift`: 첫 실행 시 앱 내 테스트용 강사용/학생용 PDF 자동 탑재.
