@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v0.1.0)'
+        required: false
+        default: 'v0.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          # Strip leading 'v' if present
+          VER="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VER}" >> "$GITHUB_OUTPUT"
+          echo "Building version: ${VER} (Tag: ${TAG})"
+
+      - name: Build macOS App Bundle
+        run: |
+          chmod +x build_app.sh
+          ./build_app.sh "${{ steps.version.outputs.version }}"
+
+      - name: Package Release Assets (DMG & ZIP)
+        run: |
+          VER="${{ steps.version.outputs.version }}"
+          APP_NAME="쌤쌤이"
+          
+          # Create macOS DMG installer
+          hdiutil create -volname "${APP_NAME}" -srcfolder "${APP_NAME}.app" -ov -format UDZO "SSamSSami-${VER}-macOS.dmg"
+          
+          # Create macOS ZIP bundle preserving permissions and symlinks
+          ditto -c -k --keepParent "${APP_NAME}.app" "SSamSSami-${VER}-macOS.zip"
+          
+          ls -lh SSamSSami-*
+
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          cat << 'EOF' > release_notes.md
+          # 🎓 쌤쌤이 (SSamSSami) ${{ steps.version.outputs.tag }}
+
+          강사용과 학생용 두 버전의 PDF를 실시간으로 똑같이(쌤쌤으로) 동기화하는 맥(macOS) 전용 강의 프리젠터 **쌤쌤이** ${{ steps.version.outputs.tag }} 릴리즈입니다.
+
+          > *A native macOS dual-PDF lecture presenter designed for teachers ("SSam") where both screens stay strictly synchronized ("Same-Same").*
+
+          ---
+
+          ### ✨ 주요 기능 (Key Features)
+          - **독립 윈도우 듀얼 프레젠테이션 (온라인 화면 공유 최적화)**:
+            - **강사용 윈도우**: 강의 진행 컨트롤, 타이머, 실시간 학생 화면 미니 모니터, 슬라이드 썸네일, 강사 전용 비밀 메모/해설 표시
+            - **학생용 윈도우**: Zoom, Google Meet, Teams 등 화상회의에서 학생용 창만 단독 공유할 수 있는 클린 윈도우
+          - **완벽한 실시간 동기화**:
+            - **슬라이드 모드 (1장씩)**: 키보드 방향키(`←`, `→`), 스페이스바, 발표 리모컨으로 페이지 전환 시 0ms 즉각 동기화
+            - **연속 스크롤 모드**: 2손가락 트랙패드/마우스 휠 스크롤 시 문서 비율에 맞춰 부드러운 픽셀 단위 실시간 동기화
+          - **화면 비율(Aspect Ratio) 일치 & 레터박스 방지**:
+            - 화상회의 화면 공유 시 생기는 검은 여백(Letterbox) 제거
+            - PDF 원본 비율, 강사 뷰 비율 복제, 16:9 와이드, 4:3 표준 원클릭 맞춤 지원
+          - **인터랙티브 라이브 도구**:
+            - **레이저 포인터 (`L` / `⌘+L`)**: 밝은 레드 네온 포인터 (도구 켠 상태에서도 트랙패드 2손가락 스크롤 가능)
+            - **펜 필기 (`P` / `⌘+D`)**: 슬라이드 위 자유 필기 실시간 동기화
+            - **형광펜 (하일라이터, `H` / `⌘+H`)**: 반투명 굵은 노란색 강조
+            - **텍스트 타이핑 (`T` / `⌘+T`)**: 슬라이드 클릭 후 인라인 텍스트 메모 입력
+            - **지우개 (`E` / `⌘+E`)**: 드래그 삭제 및 페이지 전체 필기 삭제(`⌘+K`)
+          - **비밀 엿보기 모드 (Sync Pause / `⌘+S`)**: 학생 화면은 고정해두고 강사만 다음 슬라이드나 답안을 미리 확인
+          - **학생 화면 암전 (Blackout / `B`)**: 학생 화면만 즉시 블랙아웃 처리
+
+          ---
+
+          ### 💻 시스템 요구사항 (System Requirements)
+          - macOS 13.0 (Ventura) 이상 (macOS 14 Sonoma 및 macOS 15 Sequoia 완벽 대응)
+          - Apple Silicon (M1 / M2 / M3 / M4) 및 Intel Mac 지원
+
+          ---
+
+          ### 📦 설치 방법 (Installation)
+          1. 아래 Assets에서 **`SSamSSami-${{ steps.version.outputs.version }}-macOS.dmg`** 또는 **`.zip`** 파일을 다운로드합니다.
+          2. 다운로드된 파일을 열고 `쌤쌤이.app`을 `응용 프로그램(/Applications)` 폴더로 드래그합니다.
+          3. Spotlight (`⌘ + Space`)에서 **쌤쌤이** 또는 **SSamSSami**를 검색하여 실행합니다.
+          EOF
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: 쌤쌤이 (SSamSSami) ${{ steps.version.outputs.tag }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            SSamSSami-${{ steps.version.outputs.version }}-macOS.dmg
+            SSamSSami-${{ steps.version.outputs.version }}-macOS.zip
