@@ -67,6 +67,7 @@ public class PresenterModel: ObservableObject {
     private var timerCancellable: AnyCancellable?
     
     // MARK: - Sync Communication Closures / Callbacks
+    public let pageNavigationSubject = PassthroughSubject<Int, Never>()
     public var onScrollSyncToStudent: ((_ pageIndex: Int, _ relativeY: CGFloat) -> Void)?
     public var onContinuousScrollSyncToStudent: ((_ fraction: CGFloat) -> Void)?
     public var onPageSyncToStudent: ((_ pageIndex: Int) -> Void)?
@@ -91,74 +92,77 @@ public class PresenterModel: ObservableObject {
                 }
             }
             
-            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            // Ignore if Command, Control, or Option modifier keys are held down (let standard system shortcuts handle them)
+            let userModifiers: NSEvent.ModifierFlags = [.command, .control, .option]
+            if !event.modifierFlags.intersection(userModifiers).isEmpty {
+                return event
+            }
             
-            // Support unmodified or Shift-modified presentation keys
-            if flags.isEmpty || flags == .shift {
-                switch event.keyCode {
-                case 49: // Spacebar
-                    if flags == .shift {
-                        self.previousPage()
-                    } else {
-                        self.nextPage()
-                    }
-                    return nil
-                    
-                case 124: // Right Arrow
-                    self.nextPage()
-                    return nil
-                    
-                case 123: // Left Arrow
+            let isShift = event.modifierFlags.contains(.shift)
+            
+            switch event.keyCode {
+            case 49: // Spacebar
+                if isShift {
                     self.previousPage()
-                    return nil
-                    
-                case 125: // Down Arrow
-                    if self.displayMode == .singlePage {
-                        self.nextPage()
-                        return nil
-                    }
-                    
-                case 126: // Up Arrow
-                    if self.displayMode == .singlePage {
-                        self.previousPage()
-                        return nil
-                    }
-                    
-                case 121: // Page Down (Presentation Remote Clicker)
+                } else {
                     self.nextPage()
-                    return nil
-                    
-                case 116: // Page Up (Presentation Remote Clicker)
-                    self.previousPage()
-                    return nil
-                    
-                case 11: // 'B' key (Blackout toggle)
-                    self.isBlackout.toggle()
-                    return nil
-                    
-                case 37: // 'L' key (Laser toggle)
-                    self.activeTool = (self.activeTool == .laser ? .navigation : .laser)
-                    return nil
-                    
-                case 35: // 'P' key (Pen toggle)
-                    self.activeTool = (self.activeTool == .pen ? .navigation : .pen)
-                    return nil
-                    
-                case 4: // 'H' key (Highlighter toggle)
-                    self.activeTool = (self.activeTool == .highlighter ? .navigation : .highlighter)
-                    return nil
-                    
-                case 17: // 'T' key (Text tool)
-                    self.activeTool = (self.activeTool == .text ? .navigation : .text)
-                    return nil
-                    
-                case 14: // 'E' key (Eraser tool)
-                    self.activeTool = (self.activeTool == .eraser ? .navigation : .eraser)
-                    return nil
-                    
-                default:
-                    break
                 }
+                return nil
+                
+            case 124: // Right Arrow (includes hardware numericPad/function flags)
+                self.nextPage()
+                return nil
+                
+            case 123: // Left Arrow (includes hardware numericPad/function flags)
+                self.previousPage()
+                return nil
+                
+            case 125: // Down Arrow
+                if self.displayMode == .singlePage {
+                    self.nextPage()
+                    return nil
+                }
+                
+            case 126: // Up Arrow
+                if self.displayMode == .singlePage {
+                    self.previousPage()
+                    return nil
+                }
+                
+            case 121: // Page Down (Presentation Remote Clicker)
+                self.nextPage()
+                return nil
+                
+            case 116: // Page Up (Presentation Remote Clicker)
+                self.previousPage()
+                return nil
+                
+            case 11: // 'B' key (Blackout toggle)
+                self.isBlackout.toggle()
+                return nil
+                
+            case 37: // 'L' key (Laser toggle)
+                self.activeTool = (self.activeTool == .laser ? .navigation : .laser)
+                return nil
+                
+            case 35: // 'P' key (Pen toggle)
+                self.activeTool = (self.activeTool == .pen ? .navigation : .pen)
+                return nil
+                
+            case 4: // 'H' key (Highlighter toggle)
+                self.activeTool = (self.activeTool == .highlighter ? .navigation : .highlighter)
+                return nil
+                
+            case 17: // 'T' key (Text tool)
+                self.activeTool = (self.activeTool == .text ? .navigation : .text)
+                return nil
+                
+            case 14: // 'E' key (Eraser tool)
+                self.activeTool = (self.activeTool == .eraser ? .navigation : .eraser)
+                return nil
+                
+            default:
+                break
             }
             
             return event
@@ -262,6 +266,12 @@ public class PresenterModel: ObservableObject {
     public func goToPage(_ index: Int) {
         guard index >= 0 && index < pageCount else { return }
         self.currentPageIndex = index
+        
+        // Broadcast directly to all registered PDF views (Instructor, Student, Preview)
+        pageNavigationSubject.send(index)
+        
+        // Notify instructor view directly
+        onPageSyncToInstructor?(index)
         
         // If sync is enabled, notify student window
         if isSyncEnabled {

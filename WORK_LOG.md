@@ -119,6 +119,20 @@
     4. **자유 조절 (`.free`)**: 제약 해제(`contentAspectRatio = (0, 0)`).
   - 강사용 대시보드 우측 패널에 원클릭 퀵 비율 버튼 패널을 배치하여 직관적으로 모드를 전환할 수 있도록 구현 완료.
 
+### 4.9 좌우 화살표/스페이스바 누를 시 메인 뷰 미반영 문제의 근본 원인 규명 및 해결
+- **증상**:
+  - 좌우 화살표나 스페이스바를 누르면 좌측 슬라이드 썸네일(패널 프리뷰) 테두리는 이동하는데, 정작 중앙의 메인 강사용 화면(`PDFView`)은 다음 페이지로 넘어가지 않는 현상.
+- **근본 원인 분석**:
+  1. **강사용 메인 뷰 호출 누락**: `PresenterModel.goToPage()`에서 학생용 뷰(`onPageSyncToStudent`)만 호출하고, 정작 강사용 메인 뷰에 대한 명령(`onPageSyncToInstructor`)이 누락되어 있었음.
+  2. **SwiftUI 뷰 트리 갱신 최적화 간과**: `InstructorView`의 중앙 `GeometryReader` 내부 클로저에서 `model.currentPageIndex`를 직접 읽지 않아, SwiftUI가 해당 하위 트리(`PDFKitRepresentedView`)의 `updateNSView` 호출을 건너뜀.
+  3. **macOS 하드웨어 키보드 플래그 오판**: Mac의 물리 화살표 키(`←`, `→`) 및 프리젠터 리모컨(`PageUp`, `PageDown`)은 OS 펌웨어 수준에서 `.numericPad`와 `.function` 플래그를 자동으로 부여함. 기존 코드에서 `deviceIndependentFlagsMask`와 교집합을 취해 `.isEmpty`인지 검사하는 바람에, 물리 화살표 키가 "수정키가 눌린 것"으로 오판되어 무시되는 치명적 문제가 있었음.
+  4. **앱 시작 시 키 윈도우 포커스 탈취**: 학생용 창 생성 시 `makeKeyAndOrderFront`가 호출되어 학생 창이 키 포커스를 가져가면서 강사용 창이 비활성화되는 문제.
+- **해결 조치**:
+  1. **Combine 기반 반응형 브로드캐스트 도입**: `PresenterModel.pageNavigationSubject`를 신설하여 `goToPage()` 호출 시 강사용 메인 뷰, 학생용 창, 미니 프리뷰 뷰가 즉시 `pdfView.go(to: targetPage)`를 0ms 지연으로 실행하도록 일원화.
+  2. **SwiftUI 의존성 명시**: `PDFKitRepresentedView`에 `pageIndex` 매개변수를 추가하여 SwiftUI 렌더 트리에서도 명시적으로 상태 변경을 감지하도록 보강.
+  3. **수정키 필터링 정밀화**: 오직 사용자가 직접 누른 `[.command, .control, .option]`만 필터링하도록 수정하여, Mac 물리 화살표 키와 프레젠테이션 클릭커가 100% 즉시 인식되도록 수정.
+  4. **포커스 보존**: 학생용 창 표출 시 `window.orderFront(nil)`을 사용하여 강사용 창이 시작부터 메인 포커스를 유지하도록 개선.
+
 ---
 
 ## 5. 빌드 및 배포 패키징

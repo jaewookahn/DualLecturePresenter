@@ -39,7 +39,7 @@ public struct InstructorView: View {
                             .ignoresSafeArea()
                         
                         if model.instructorDoc != nil {
-                            PDFKitRepresentedView(model: model, role: .instructor)
+                            PDFKitRepresentedView(model: model, role: .instructor, pageIndex: model.currentPageIndex)
                                 .ignoresSafeArea()
                         } else {
                             emptyStateView

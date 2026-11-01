@@ -1,6 +1,7 @@
 import AppKit
 import PDFKit
 import SwiftUI
+import Combine
 
 public enum PDFViewRole {
     case instructor
@@ -23,6 +24,7 @@ public class InteractivePDFContainerView: NSView, NSTextFieldDelegate {
     private var scrollObserver: NSObjectProtocol?
     private var pageObserver: NSObjectProtocol?
     private var scaleObserver: NSObjectProtocol?
+    private var pageNavCancellable: AnyCancellable?
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -35,6 +37,7 @@ public class InteractivePDFContainerView: NSView, NSTextFieldDelegate {
     }
     
     deinit {
+        pageNavCancellable?.cancel()
         NotificationCenter.default.removeObserver(self)
         if let observer = scrollObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -103,7 +106,8 @@ public class InteractivePDFContainerView: NSView, NSTextFieldDelegate {
         self.overlayView.model = model
         
         let doc = (role == .instructor) ? model.instructorDoc : model.studentDoc
-        if pdfView.document !== doc {
+        let docChanged = (pdfView.document !== doc)
+        if docChanged {
             pdfView.document = doc
         }
         
@@ -113,6 +117,9 @@ public class InteractivePDFContainerView: NSView, NSTextFieldDelegate {
         if pdfView.autoScales != model.autoScales {
             pdfView.autoScales = model.autoScales
         }
+        
+        // Setup direct page navigation Combine subscriber
+        setupPageNavigationSubscription(model: model)
         
         // Setup observers only once
         if scrollObserver == nil {
@@ -134,8 +141,8 @@ public class InteractivePDFContainerView: NSView, NSTextFieldDelegate {
             }
         }
         
-        // Page position sync for single-page mode (clicker, thumbnail, shortcut)
-        if model.displayMode == .singlePage && model.pageCount > 0 && model.currentPageIndex < model.pageCount {
+        // Page position sync (e.g. initial document load or single-page mode sync)
+        if (docChanged || model.displayMode == .singlePage) && model.pageCount > 0 && model.currentPageIndex < model.pageCount {
             if let curPage = pdfView.currentPage, let doc = doc {
                 let currentIdx = doc.index(for: curPage)
                 if currentIdx != model.currentPageIndex {
@@ -155,8 +162,52 @@ public class InteractivePDFContainerView: NSView, NSTextFieldDelegate {
         updateInlineEditorPosition()
     }
     
+    // MARK: - Direct Page Navigation Subscription
+    private func setupPageNavigationSubscription(model: PresenterModel) {
+        guard pageNavCancellable == nil else { return }
+        
+        pageNavCancellable = model.pageNavigationSubject
+            .receive(on: RunLoop.main)
+            .sink { [weak self] targetIndex in
+                guard let self = self, let doc = self.pdfView.document else { return }
+                guard targetIndex >= 0 && targetIndex < doc.pageCount else { return }
+                guard let page = doc.page(at: targetIndex) else { return }
+                
+                let shouldNavigate: Bool
+                switch self.role {
+                case .instructor:
+                    shouldNavigate = true
+                case .student, .preview:
+                    shouldNavigate = self.model?.isSyncEnabled ?? true
+                }
+                
+                if shouldNavigate {
+                    self.isPerformingSync = true
+                    self.pdfView.go(to: page)
+                    self.isPerformingSync = false
+                    self.overlayView.needsDisplay = true
+                    self.updateInlineEditorPosition()
+                }
+            }
+    }
+    
     // MARK: - Instructor Side Hooks
     private func setupInstructorSyncHooks() {
+        guard let model = model else { return }
+        
+        // Direct closure hook from PresenterModel
+        model.onPageSyncToInstructor = { [weak self] pageIndex in
+            guard let self = self, let doc = self.pdfView.document else { return }
+            guard pageIndex >= 0 && pageIndex < doc.pageCount else { return }
+            guard let page = doc.page(at: pageIndex) else { return }
+            
+            self.isPerformingSync = true
+            self.pdfView.go(to: page)
+            self.isPerformingSync = false
+            self.overlayView.needsDisplay = true
+            self.updateInlineEditorPosition()
+        }
+        
         // Observe Page changes in single page mode
         pageObserver = NotificationCenter.default.addObserver(
             forName: .PDFViewPageChanged,
@@ -688,10 +739,12 @@ public class AnnotationCanvasView: NSView {
 public struct PDFKitRepresentedView: NSViewRepresentable {
     @ObservedObject public var model: PresenterModel
     public var role: PDFViewRole
+    public var pageIndex: Int
     
-    public init(model: PresenterModel, role: PDFViewRole) {
+    public init(model: PresenterModel, role: PDFViewRole, pageIndex: Int = 0) {
         self.model = model
         self.role = role
+        self.pageIndex = pageIndex
     }
     
     public func makeNSView(context: Context) -> InteractivePDFContainerView {

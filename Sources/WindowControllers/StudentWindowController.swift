@@ -61,7 +61,7 @@ public class StudentWindowController: NSWindowController, NSWindowDelegate {
             window.setFrame(NSRect(x: originX, y: originY, width: winWidth, height: winHeight), display: true)
         }
         
-        window.makeKeyAndOrderFront(nil)
+        window.orderFront(nil)
         model?.isStudentWindowOpen = true
     }
     

@@ -49,7 +49,7 @@ public struct MiniStudentPreview: View {
                         }
                     } else {
                         // Embedded student view
-                        PDFKitRepresentedView(model: model, role: .preview)
+                        PDFKitRepresentedView(model: model, role: .preview, pageIndex: model.currentPageIndex)
                             .frame(height: 160)
                             .cornerRadius(8)
                             .allowsHitTesting(false) // Preview only
