@@ -137,11 +137,19 @@
 - **명칭 유래**:
   - 선생님(쌤)들을 위한 프리젠터
   - 강사용 화면과 학생용 화면이 완벽하게 똑같이(쌤쌤으로) 싱크된다는 의미 (Same-Same)
-  - 기존 패밀리 앱 시리즈인 책 클리핑 하이라이트 앱 **'줄줄이'**, 성경 Q&A 앱 **'답답이'**의 뒤를 잇는 3번째 공식 시리즈
 - **브랜드 리브랜딩 적용**:
   - macOS 앱 번들 및 표시명: `/Applications/쌤쌤이.app`
   - 윈도우 타이틀: `쌤쌤이 - 강사용 프리젠터`, `쌤쌤이 - 학생용 강의 화면 (온라인 화면 공유용)`
   - 독립 GitHub 공개 리포지토리: `https://github.com/jaewookahn/DualLecturePresenter`
+
+### 4.11 GitHub Actions 자동 릴리즈(CI/CD) 파이프라인 구축 및 v0.1.0 공식 릴리즈
+- **구현 내용**:
+  - `.github/workflows/release.yml` 추가: `v*` 태그 푸시 또는 수동 workflow_dispatch 시 자동 실행.
+  - `build_app.sh`: 버전 파라미터(`$1`)를 수신하여 `CFBundleShortVersionString` 및 `CFBundleVersion` 동적 주입.
+  - 고압축 디스크 이미지(`hdiutil` DMG) 및 macOS 파일 속성을 온전히 보존하는 `ditto` ZIP 패키징 자동화.
+  - `softprops/action-gh-release@v2` 액션을 통해 릴리즈 노트와 바이너리 에셋 2종(`SSamSSami-0.1.0-macOS.dmg`, `.zip`) 자동 발행.
+- **배포 결과**:
+  - `v0.1.0` 태그 트리거 후 46초 만에 성공적으로 릴리즈 완료: [v0.1.0 Releases](https://github.com/jaewookahn/DualLecturePresenter/releases/tag/v0.1.0)
 
 ---
 

@@ -13,14 +13,10 @@ The student presentation view operates in a **dedicated, independent window**, a
 
 ## 💡 The Story Behind the Name ("SSamSSami")
 
-The name **SSamSSami (쌤쌤이)** combines three playful and meaningful Korean language concepts:
+The name **SSamSSami (쌤쌤이)** combines two playful and witty concepts:
 
 1. **"SSam" (쌤)**: An affectionate Korean everyday term for **Teacher / Instructor** (derived from *선생님, Seon-saeng-nim*).
-2. **"Same-Same" (쌤쌤)**: A popular Korean colloquial idiom meaning **"It's a tie" or "Exactly equal / Even"** (from English *Same-Same*). Even though the instructor views private notes and students see a clean slide, page transitions, continuous scrolling, aspect ratios, laser pointer, and drawings always move in **"Same-Same" (쌤쌤)** real-time lockstep!
-3. **The 3rd in the Family**: Follows the user's signature rhythmic app series:
-   - **JoolJooli (줄줄이)**: Book clipping and highlight extraction tool
-   - **DapDapi (답답이)**: Church & Bible Q&A assistant
-   - **SSamSSami (쌤쌤이)**: Dual-PDF synchronized presenter for educators
+2. **"Same-Same" (쌤쌤)**: A popular colloquial idiom meaning **"Exactly equal / Even"** (from English *Same-Same*). Even though the instructor views private notes and students see a clean slide, page transitions, continuous scrolling, aspect ratios, laser pointer, and drawings always move in **"Same-Same" (쌤쌤)** real-time lockstep!
 
 ---
 
@@ -88,20 +84,22 @@ The name **SSamSSami (쌤쌤이)** combines three playful and meaningful Korean 
 
 ---
 
-## 🚀 Installation & Running
+## 🚀 Download & Installation
 
-### 1. Quick Launch
-Run the pre-built `.app` bundle:
-```bash
-open /Users/codex/prj/DualLecturePresenter/쌤쌤이.app
-```
+### 1. Download Pre-built Release (Recommended)
+Download the latest binaries directly from [GitHub Releases (v0.1.0)](https://github.com/jaewookahn/DualLecturePresenter/releases/latest):
+- **`SSamSSami-0.1.0-macOS.dmg`**: Open the disk image and drag `쌤쌤이.app` into your `/Applications` folder.
+- **`SSamSSami-0.1.0-macOS.zip`**: Extract and launch `쌤쌤이.app`.
 
-### 2. Install to Applications (`/Applications/쌤쌤이.app`)
+After installation, launch it anytime from Spotlight (`⌘ + Space`) by typing **쌤쌤이** or **SSamSSami**.
+
+### 2. Build from Source
 ```bash
-cd /Users/codex/prj/DualLecturePresenter
+git clone https://github.com/jaewookahn/DualLecturePresenter.git
+cd DualLecturePresenter
+./build_app.sh 0.1.0
 ./install_to_applications.sh
 ```
-After installation, launch it anytime from Spotlight (`⌘ + Space`) by typing **쌤쌤이** or **SSamSSami**.
 
 ---
 

@@ -11,11 +11,10 @@
 
 ## 💡 이름의 의미 ('쌤쌤이'란?)
 
-**쌤쌤이 (SSamSSami)**는 독특하고 유쾌한 세 가지 의미를 담고 있습니다:
+**쌤쌤이 (SSamSSami)**는 두 가지 위트 있는 의미를 담고 있습니다:
 
 1. **선생님(쌤)들을 위한 프리젠터**: 온·오프라인에서 강의를 이끄는 모든 강사·선생님(**쌤**)들의 든든한 강의 조력자입니다.
 2. **두 화면이 쌤쌤 (Same-Same)**: 강사용 PDF와 학생용 PDF의 내용이 달라도(강사용은 비밀 메모·해설 포함, 학생용은 클린 슬라이드), 페이지 넘김과 스크롤, 화면 비율과 레이저 포인터/필기는 완벽하게 **"쌤쌤(Same-Same, 똑같이)"** 실시간 동기화된다는 언어유희입니다.
-3. **패밀리 앱 3호**: 책 클리핑 하이라이트 앱 **'줄줄이'**, 성경 Q&A 앱 **'답답이'**의 아이덴티티를 잇는 3번째 공식 시리즈 앱입니다.
 
 ---
 
@@ -84,20 +83,22 @@
 
 ---
 
-## 🚀 실행 및 설치 방법
+## 🚀 다운로드 및 설치 방법
 
-### 1. 즉시 실행
-Finder에서 빌드된 앱 번들을 바로 실행할 수 있습니다:
-```bash
-open /Users/codex/prj/DualLecturePresenter/쌤쌤이.app
-```
+### 1. 최신 릴리즈 다운로드 (추천)
+[GitHub 최신 릴리즈(v0.1.0)](https://github.com/jaewookahn/DualLecturePresenter/releases/latest) 페이지에서 설치 파일을 바로 다운로드할 수 있습니다:
+- **`SSamSSami-0.1.0-macOS.dmg`**: 디스크 이미지를 열고 `쌤쌤이.app`을 `응용 프로그램(/Applications)`으로 드래그
+- **`SSamSSami-0.1.0-macOS.zip`**: 압축 해제 후 `쌤쌤이.app`을 실행
 
-### 2. Mac 응용 프로그램(/Applications)에 설치
+설치 후 Spotlight (`⌘ + Space`)에서 **쌤쌤이** 또는 **SSamSSami**를 검색하여 실행할 수 있습니다.
+
+### 2. 소스코드에서 직접 빌드 및 설치
 ```bash
-cd /Users/codex/prj/DualLecturePresenter
+git clone https://github.com/jaewookahn/DualLecturePresenter.git
+cd DualLecturePresenter
+./build_app.sh 0.1.0
 ./install_to_applications.sh
 ```
-설치 후 Spotlight (`⌘ + Space`)에서 **쌤쌤이** 또는 **SSamSSami**를 검색하여 실행할 수 있습니다.
 
 ---
 
