@@ -1,7 +1,7 @@
 # 🎓 SSamSSami (쌤쌤이)
 
 > **A native macOS dual-PDF lecture presenter designed for teachers ("SSam") where both screens stay strictly synchronized ("Same-Same").**  
-> *[한국어 설명서 (README.md)](README.md)*
+> *[한국어 설명서 (README.md)](README.md) | [Agent Memory & Architecture Spec (MEMORY.md)](MEMORY.md)*
 
 **SSamSSami** is a native macOS presentation tool engineered specifically for lecturers, teachers, and presenters. It simultaneously manages two versions of a lecture PDF:
 1. **Instructor PDF** (containing personal annotations, secret teaching memos, solutions, and hints)

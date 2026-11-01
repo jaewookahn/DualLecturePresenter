@@ -1,7 +1,7 @@
 # 🎓 쌤쌤이 (SSamSSami)
 
 > **선생님(쌤)들을 위한, 두 화면이 쌤쌤(Same-Same)으로 똑같이 싱크되는 macOS 강의용 듀얼 프리젠터**  
-> *[English README is available here](README_EN.md)*
+> *[English README](README_EN.md) | [에이전트 메모리 및 아키텍처 명세서 (MEMORY.md)](MEMORY.md)*
 
 강의 진행 시 **강사용(어노테이션, 비밀 메모, 답안 포함) PDF**와 **학생용(클린 버전) PDF**를 동시에 관리하며, 스크롤과 액션을 실시간 동기화하는 맥(macOS) 전용 프리젠터 앱입니다.
 
