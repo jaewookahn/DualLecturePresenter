@@ -76,12 +76,12 @@
 ### 1. 즉시 실행
 Finder에서 빌드된 앱 번들을 바로 실행할 수 있습니다:
 ```bash
-open /Users/codex/prj/download-bible-project/DualLecturePresenter/DualLecturePresenter.app
+open /Users/codex/prj/DualLecturePresenter/DualLecturePresenter.app
 ```
 
 ### 2. Mac 응용 프로그램(/Applications)에 설치
 ```bash
-cd /Users/codex/prj/download-bible-project/DualLecturePresenter
+cd /Users/codex/prj/DualLecturePresenter
 ./install_to_applications.sh
 ```
 설치 후 Spotlight (`⌘ + Space`)에서 **DualLecturePresenter** 또는 **강의용 듀얼 프리젠터**를 검색하여 실행할 수 있습니다.
